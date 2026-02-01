@@ -1,5 +1,5 @@
 using MediatR;
-using ProductService.Application.DTOs;
+using ProductService.Application.Dto;
 using Shared.Common.Models;
 
 namespace ProductService.Application.Queries.GetProductsFiltered;

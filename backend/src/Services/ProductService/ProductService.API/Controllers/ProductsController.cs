@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Commands.CreateProduct;
 using ProductService.Application.Commands.DeleteProduct;
 using ProductService.Application.Commands.UpdateProduct;
-using ProductService.Application.DTOs;
+using ProductService.Application.Dto;
 using ProductService.Application.Queries.GetProductById;
-using ProductService.Application.Queries.GetProducts;
 using ProductService.Application.Queries.GetProductsFiltered;
 using Shared.Common.Models;
 
@@ -17,22 +16,6 @@ namespace ProductService.API.Controllers;
 public class ProductsController(IMediator mediator, ILogger<ProductsController> logger) : ControllerBase
 {
     private readonly ILogger<ProductsController> _logger = logger;
-
-    [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<PagedResult<ProductDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
-    {
-        var query = new GetProductsQuery(page, pageSize);
-        var result = await mediator.Send(query, cancellationToken);
-
-        if (!result.IsSuccess)
-            return BadRequest(ApiResponse.Failed(result.Error));
-
-        return Ok(ApiResponse<PagedResult<ProductDto>>.Succeeded(result.Data));
-    }
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<ProductDto>), StatusCodes.Status200OK)]

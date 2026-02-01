@@ -8,10 +8,6 @@ namespace ProductService.Infrastructure.Repositories;
 
 public class ProductRepository(ProductContext context) : BaseRepository<Product>(context), IProductRepository
 {
-    public Task<IEnumerable<Product>> GetByCategory(string category, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
     public async Task<Product?> GetByNameAsync(
         string name, 
         CancellationToken cancellationToken = default)
@@ -20,16 +16,5 @@ public class ProductRepository(ProductContext context) : BaseRepository<Product>
             .FirstOrDefaultAsync(
                 p => p.Name == name && !p.IsDeleted, 
                 cancellationToken);
-    }
-
-    public async Task<bool> ExistsAsync(
-        Guid id, 
-        CancellationToken cancellationToken = default)
-    {
-        if (id == Guid.Empty) 
-            return false;
-
-        return await TableAsNoTracking
-            .AnyAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
 }

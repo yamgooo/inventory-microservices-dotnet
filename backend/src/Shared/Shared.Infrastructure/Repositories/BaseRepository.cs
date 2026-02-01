@@ -31,11 +31,11 @@ public abstract class BaseRepository<T>(DbContext context) : IRepository<T>
         if (page < 1)
             throw new ArgumentException("Page must be greater than 0", nameof(page));
 
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize is < 1 or > 100)
             throw new ArgumentException("PageSize must be between 1 and 100", nameof(pageSize));
 
         var totalCount = await Entities.CountAsync(cancellationToken);
-
+ 
         var items = await Entities
             .AsNoTracking()
             .Skip((page - 1) * pageSize)

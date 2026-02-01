@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using ProductService.Application.DTOs;
+using ProductService.Application.Dto;
 using ProductService.Application.Mappings;
 using ProductService.Domain.Entities;
 using ProductService.Domain.Interfaces;

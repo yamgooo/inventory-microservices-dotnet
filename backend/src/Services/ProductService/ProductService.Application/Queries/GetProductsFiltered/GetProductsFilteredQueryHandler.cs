@@ -8,7 +8,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ProductService.Application.DTOs;
+using ProductService.Application.Dto;
 using ProductService.Application.Mappings;
 using ProductService.Domain.Interfaces;
 using Shared.Common.Models;
@@ -36,7 +36,7 @@ public class GetProductsFilteredQueryHandler
     {
         try
         {
-            _logger.LogInformation("Filtering products with criteria");
+            _logger.LogInformation("Filtering products");
 
             var query = _repository.TableAsNoTracking
                 .Where(p => !p.IsDeleted);

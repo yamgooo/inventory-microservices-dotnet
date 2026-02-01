@@ -1,4 +1,4 @@
-using ProductService.Application.DTOs;
+using ProductService.Application.Dto;
 using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Mappings;
