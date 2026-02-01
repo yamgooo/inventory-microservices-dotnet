@@ -1,3 +1,4 @@
+using Microsoft.OpenApi;
 using ProductService.API.Middlewares;
 using ProductService.Application;
 using ProductService.Infrastructure;
@@ -23,35 +24,27 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new()
+        options.SwaggerDoc("v1", new OpenApiInfo
         {
             Title = "Product Service API",
             Version = "v1",
-            Description = "API for managing products in the inventory system",
-            Contact = new()
-            {
-                Name = "Erik Portilla",
-                Email = "erik@example.com"
-            }
-        });
-    });
-
-    // CORS
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins(
-                    "http://localhost:4200"   // Angular
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+            Description = "API for managing products in the inventory system"
         });
     });
 
     builder.Services.AddApplicationServices(); 
     builder.Services.AddInfrastructureServices(builder.Configuration); 
+        
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAngularApp",
+            policy =>
+            {
+                policy.WithOrigins("http://localhost:4200") 
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+    });
     
     var app = builder.Build();
     
@@ -71,15 +64,14 @@ try
     app.UseMiddleware<RequestLoggingMiddleware>();
 
     app.UseHttpsRedirection();
-    
-    app.UseCors("AllowFrontend");
+
+    app.UseCors("AllowAngularApp");
     
     app.UseAuthorization();
 
     app.MapControllers();
 
-    Log.Information("ProductService.API started successfully on {Url}", 
-        app.Configuration["Urls"] ?? "http://localhost:5001");
+    Log.Information("ProductService.API started successfully");
     
     app.Run();
 }

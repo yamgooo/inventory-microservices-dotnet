@@ -1,12 +1,4 @@
-// -------------------------------------------------------------
-// Get Products Filtered Query Handler
-// Author: Erik Portilla
-// Created: 2026-01-31
-// Description: Aplica filtros dinámicos usando IQueryable del repositorio
-// -------------------------------------------------------------
-
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.Dto;
 using ProductService.Application.Mappings;
@@ -16,29 +8,20 @@ using Shared.Infrastructure.Pagination;
 
 namespace ProductService.Application.Queries.GetProductsFiltered;
 
-public class GetProductsFilteredQueryHandler 
+public class GetProductsFilteredQueryHandler(
+    IProductRepository repository,
+    ILogger<GetProductsFilteredQueryHandler> logger)
     : IRequestHandler<GetProductsFilteredQuery, Result<PagedResult<ProductDto>>>
 {
-    private readonly IProductRepository _repository;
-    private readonly ILogger<GetProductsFilteredQueryHandler> _logger;
-
-    public GetProductsFilteredQueryHandler(
-        IProductRepository repository,
-        ILogger<GetProductsFilteredQueryHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
     public async Task<Result<PagedResult<ProductDto>>> Handle(
         GetProductsFilteredQuery request,
         CancellationToken cancellationToken)
     {
         try
         {
-            _logger.LogInformation("Filtering products");
+            logger.LogInformation("Filtering products");
 
-            var query = _repository.TableAsNoTracking
+            var query = repository.TableAsNoTracking
                 .Where(p => !p.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(request.Name))
@@ -81,7 +64,7 @@ public class GetProductsFilteredQueryHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error filtering products");
+            logger.LogError(ex, "Error filtering products");
             return Result<PagedResult<ProductDto>>.Failure(
                 "An error occurred while filtering products");
         }

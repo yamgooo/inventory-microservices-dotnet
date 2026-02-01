@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Transactions;
+using TransactionService.Domain.Entities;
 
 namespace TransactionService.Infrastructure.Data;
 

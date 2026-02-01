@@ -11,6 +11,7 @@ public class TransactionDto
     public TransactionType Type { get; set; }
     public string TypeDescription => Type == TransactionType.Purchase ? "Compra" : "Venta";
     public int Quantity { get; set; }
+    public int StockAfterTransaction { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
     public string? Details { get; set; }

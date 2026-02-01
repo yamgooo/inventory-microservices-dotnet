@@ -34,7 +34,7 @@ public class ProductServiceClient(HttpClient httpClient, ILogger<ProductServiceC
             }
 
             logger.LogInformation(
-                "Product {ProductId} fetched successfully. Stock: {Stock}", 
+                "Product {ProductId} fetched successfully. Quantity: {Quantity}", 
                 productId, 
                 apiResponse.Data.Stock);
 
@@ -66,12 +66,12 @@ public class ProductServiceClient(HttpClient httpClient, ILogger<ProductServiceC
 
             var request = new
             {
-                ProductId = productId,
+                Id = productId,
                 Quantity = quantityChange
             };
 
             var response = await httpClient.PutAsJsonAsync(
-                $"api/products/{productId}/stock", 
+                $"api/products/{productId}/stock",
                 request, 
                 cancellationToken);
 
@@ -86,7 +86,7 @@ public class ProductServiceClient(HttpClient httpClient, ILogger<ProductServiceC
                 return false;
             }
 
-            logger.LogInformation("Stock updated successfully for product {ProductId}", productId);
+            logger.LogInformation("Quantity updated successfully for product {ProductId}", productId);
             return true;
         }
         catch (Exception ex)
@@ -100,5 +100,55 @@ public class ProductServiceClient(HttpClient httpClient, ILogger<ProductServiceC
     {
         var product = await GetProductAsync(productId, cancellationToken);
         return product != null;
+    }
+    
+    public async Task<Dictionary<Guid, ProductDto>> GetProductsByIdsAsync(
+        IEnumerable<Guid> productIds, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var ids = productIds.Distinct().ToList();
+            
+            if (ids.Count == 0)
+            {
+                logger.LogDebug("No product IDs provided for batch fetch");
+                return new Dictionary<Guid, ProductDto>();
+            }
+
+            logger.LogDebug("Fetching {Count} products in batch", ids.Count);
+
+            var response = await httpClient.PostAsJsonAsync(
+                "api/products/batch", 
+                new { ids }, 
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Failed to fetch products in batch. Status: {StatusCode}", 
+                    response.StatusCode);
+                return new Dictionary<Guid, ProductDto>();
+            }
+
+            var apiResponse = await response.Content
+                .ReadFromJsonAsync<ApiResponse<List<ProductDto>>>(cancellationToken);
+
+            if (apiResponse?.Data == null)
+            {
+                logger.LogWarning("Batch fetch returned null data");
+                return new Dictionary<Guid, ProductDto>();
+            }
+
+            var result = apiResponse.Data.ToDictionary(p => p.Id, p => p);
+            
+            logger.LogDebug("Successfully fetched {Count} products", result.Count);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching products in batch");
+            return new Dictionary<Guid, ProductDto>();
+        }
     }
 }

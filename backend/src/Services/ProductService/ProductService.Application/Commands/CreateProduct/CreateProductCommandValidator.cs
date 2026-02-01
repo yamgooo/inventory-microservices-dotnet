@@ -29,8 +29,8 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             .LessThan(1000000).WithMessage("Price must be less than 1,000,000");
 
         RuleFor(x => x.Stock)
-            .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be negative")
-            .LessThan(100000).WithMessage("Stock must be less than 100,000");
+            .GreaterThanOrEqualTo(0).WithMessage("Quantity cannot be negative")
+            .LessThan(100000).WithMessage("Quantity must be less than 100,000");
     }
 
     private bool BeAValidUrl(string url)

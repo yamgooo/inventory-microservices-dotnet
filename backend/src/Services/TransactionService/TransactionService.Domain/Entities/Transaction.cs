@@ -12,6 +12,7 @@ public partial class Transaction
     public TransactionType Type { get; set; }
 
     public int Quantity { get; set; }
+    public int StockAfterTransaction  { get; set; }
 
     public decimal UnitPrice { get; set; }
 

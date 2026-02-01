@@ -1,0 +1,90 @@
+<hlm-sheet side="right" #sheet>
+    <div class="flex flex-row gap-2 items-center">
+        <ng-icon name="lucideClipboardList" size="1.5rem" />
+        <h1 class="text-xl font-semibold">Gestión de Productos</h1>
+    </div>
+    <p class="text-gray-600 text-sm leading-relaxed">
+        Gestiona el listado de productos registrado en la base de datos.
+    </p>
+
+    <div class="flex flex-row justify-between pt-4 pb-4">
+        <div class="flex flex-row gap-2">
+            <button hlmBtn variant="outline" size="sm">
+                <ng-icon hlm size="sm" name="lucideFilter" />
+                Filtros
+            </button>
+            <input class="w-80" hlmInput type="text" placeholder="Buscar por nombre..." [(ngModel)]="nameSearchTerm"
+                (keyup.enter)="onSearch()" />
+        </div>
+
+        <button hlmBtn hlmSheetTrigger variant="default" size="sm" (click)="createProduct()">
+            Nuevo Producto
+            <ng-icon hlm size="sm" name="lucidePlus" />
+        </button>
+
+    </div>
+
+    <app-product-form [productId]="selectedId()" />
+
+    @if (isLoading()) {
+    <div class="flex w-full justify-center items-center p-10">
+        <div hlmItem variant="muted" class="flex items-center gap-4 p-4 border rounded-lg">
+            <hlm-spinner />
+            <div hlmItemTitle>Cargando datos...</div>
+        </div>
+    </div>
+    }
+
+    @if (!isLoading() && products().length > 0) {
+    <div class="w-full">
+        <div hlmTableContainer>
+            <table hlmTable class="w-full">
+                <thead hlmTHead>
+                    <tr hlmTr>
+                        <th hlmTh class="">Id</th>
+                        <th hlmTh>Nombre</th>
+                        <th hlmTh>Categoria</th>
+                        <th hlmTh class="text-center">Stock</th>
+                        <th hlmTh class="text-right">Precio</th>
+                        <th hlmTh class="text-right">Activo</th>
+                    </tr>
+                </thead>
+                <tbody hlmTBody>
+                    @for (product of products(); track product.id) {
+                    <tr hlmTr 
+                        (click)="selectedId.set(product.id); sheet.open()" 
+                        class="cursor-pointer hover:bg-gray-50">
+                        <td hlmTd class="font-medium text-gray-600  w-[400px]">{{ product.id }}</td>
+                        <td hlmTd>{{ product.name }}</td>
+                        <td hlmTd>{{ product.category }}</td>
+                        <td hlmTd [class]="'text-center ' + (product.stock <= 0 ? 'text-red-700' : '')">
+                            {{ product.stock }}
+                        </td>
+                        <td hlmTd class="text-right">{{ product.price }} $</td>
+                        <td hlmTd class="text-right">{{ product.price * product.stock}} $</td>
+                    </tr>
+                    }
+                </tbody>
+                <tfoot hlmTFoot>
+                    <tr hlmTr>
+                        <td hlmTd [attr.colSpan]="5">Total Activo</td>
+                        <td hlmTd class="text-right">$ {{ totalActivo() }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    }
+
+    @if (!isLoading() && products().length === 0) {
+    <div class="flex w-full justify-center items-center p-10">
+        <div hlmItem variant="muted" class="flex items-center gap-4 p-4 border rounded-lg">
+            <ng-icon name="lucideClipboardList" size="1.5rem" class="text-gray-400" />
+            <div hlmItemTitle>No se encontró ningún resultado.</div>
+        </div>
+    </div>
+    }
+
+    <app-product-form [productId]="selectedId()" />
+
+</hlm-sheet>

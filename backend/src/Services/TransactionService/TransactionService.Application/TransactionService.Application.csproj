@@ -14,7 +14,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\Shared\Shared.Common\Shared.Common.csproj" />
+      <ProjectReference Include="..\..\ProductService\ProductService.Application\ProductService.Application.csproj" />
       <ProjectReference Include="..\TransactionService.Domain\TransactionService.Domain.csproj" />
+      <ProjectReference Include="..\TransactionService.Infrastructure\TransactionService.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>

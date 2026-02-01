@@ -2,10 +2,10 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Shared.Common.Models;
 using TransactionService.Application.Dto;
-using TransactionService.Application.Services;
 using TransactionService.Domain.Entities;
 using TransactionService.Domain.Enums;
 using TransactionService.Domain.Interfaces;
+using TransactionService.Infrastructure.HttpClients;
 
 namespace TransactionService.Application.Commands.CreateTransaction;
 
@@ -43,7 +43,7 @@ public class CreateTransactionCommandHandler(
                 if (product.Stock < request.Quantity)
                 {
                     logger.LogWarning(
-                        "Insufficient stock for product {ProductId}. Available: {Stock}, Requested: {Quantity}",
+                        "Insufficient stock for product {ProductId}. Available: {Quantity}, Requested: {Quantity}",
                         request.ProductId,
                         product.Stock,
                         request.Quantity);
@@ -52,6 +52,8 @@ public class CreateTransactionCommandHandler(
                         $"Insufficient stock. Available: {product.Stock}, Requested: {request.Quantity}");
                 }
             }
+
+            var currentStock = product.Stock;
 
             var transaction = new Transaction
             {
@@ -63,7 +65,8 @@ public class CreateTransactionCommandHandler(
                 TotalPrice = request.Quantity * request.UnitPrice,
                 Details = request.Details,
                 TransactionDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                StockAfterTransaction = currentStock
             };
 
             await transactionRepository.AddAsync(transaction, cancellationToken);
@@ -73,9 +76,11 @@ public class CreateTransactionCommandHandler(
                 "Transaction {TransactionId} created successfully",
                 transaction.Id);
 
+            var absoluteQuantity = Math.Abs(request.Quantity);
+            
             var stockChange = request.Type == TransactionType.Sale 
-                ? -request.Quantity  
-                : +request.Quantity;
+                ? -absoluteQuantity  
+                : absoluteQuantity;
 
             var stockUpdated = await productServiceClient.UpdateStockAsync(
                 request.ProductId,
@@ -101,7 +106,8 @@ public class CreateTransactionCommandHandler(
                 TotalPrice = transaction.TotalPrice,
                 Details = transaction.Details,
                 TransactionDate = transaction.TransactionDate,
-                CreatedAt = transaction.CreatedAt
+                CreatedAt = transaction.CreatedAt,
+                StockAfterTransaction = currentStock
             };
 
             logger.LogInformation(

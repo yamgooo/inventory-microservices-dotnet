@@ -8,7 +8,9 @@ namespace TransactionService.Application.Queries.GetTransactionsFiltered;
 public record GetTransactionsFilteredQuery(
     int Page,
     int PageSize,
+    int? MinAmount,
+    int? MaxAmount,
     Guid? ProductId,
-    string? TransactionType,
+    TransactionType? TransactionType,
     DateTime? StartDate,
-    DateTime? EndDate) : IRequest<Result<TransactionDto>>;
+    DateTime? EndDate) : IRequest<Result<PagedResult<TransactionDto>>>;
