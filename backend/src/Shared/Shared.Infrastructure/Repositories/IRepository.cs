@@ -9,6 +9,9 @@ namespace Shared.Infrastructure.Repositories;
 
 public interface IRepository<T> where T : class
 {
+    IQueryable<T> Table { get; }
+    IQueryable<T> TableAsNoTracking { get; }
+    
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<PagedResult<T>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default);

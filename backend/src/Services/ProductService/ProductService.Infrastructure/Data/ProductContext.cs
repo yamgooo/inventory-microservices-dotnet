@@ -3,7 +3,7 @@ using ProductService.Domain.Entities;
 
 namespace ProductService.Infrastructure.Data;
 
-public partial class Context(DbContextOptions<Context> options) : DbContext(options)
+public partial class ProductContext(DbContextOptions<ProductContext> options) : DbContext(options)
 {
     public virtual DbSet<Product> Products { get; set; }
 

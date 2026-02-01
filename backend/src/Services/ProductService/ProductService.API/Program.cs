@@ -1,41 +1,93 @@
+using ProductService.API.Middlewares;
+using ProductService.Application;
+using ProductService.Infrastructure;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/product-service-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
-var app = builder.Build();
+builder.Host.UseSerilog();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.MapOpenApi();
-}
+    Log.Information("Starting ProductService.API...");
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    builder.Services.AddControllers();
+    
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
+        options.SwaggerDoc("v1", new()
+        {
+            Title = "Product Service API",
+            Version = "v1",
+            Description = "API for managing products in the inventory system",
+            Contact = new()
+            {
+                Name = "Erik Portilla",
+                Email = "erik@example.com"
+            }
+        });
+    });
 
-app.Run();
+    // CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy.WithOrigins(
+                    "http://localhost:4200"   // Angular
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+    });
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+    builder.Services.AddApplicationServices(); 
+    builder.Services.AddInfrastructureServices(builder.Configuration); 
+    
+    var app = builder.Build();
+    
+    // Development only
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Service API v1");
+            options.RoutePrefix = string.Empty;
+        });
+    }
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+    app.UseMiddleware<RequestLoggingMiddleware>();
+
+    app.UseHttpsRedirection();
+    
+    app.UseCors("AllowFrontend");
+    
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    Log.Information("ProductService.API started successfully on {Url}", 
+        app.Configuration["Urls"] ?? "http://localhost:5001");
+    
+    app.Run();
+}
+catch (Exception ex)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }

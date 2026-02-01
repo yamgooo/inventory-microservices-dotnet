@@ -1,0 +1,13 @@
+namespace ProductService.Application.DTOs;
+
+public class ProductFilterDto
+{
+    public string? Name { get; set; }
+    public string? Category { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public int? MinStock { get; set; }
+    public int? MaxStock { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+}
