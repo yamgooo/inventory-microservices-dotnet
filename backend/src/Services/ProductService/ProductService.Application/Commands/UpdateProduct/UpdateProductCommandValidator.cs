@@ -25,9 +25,5 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
         RuleFor(x => x.Price)
             .GreaterThan(0).WithMessage("Price must be greater than 0")
             .LessThan(1000000).WithMessage("Price must be less than 1,000,000");
-
-        RuleFor(x => x.Stock)
-            .GreaterThanOrEqualTo(0).WithMessage("Quantity cannot be negative")
-            .LessThan(100000).WithMessage("Quantity must be less than 100,000");
     }
 }

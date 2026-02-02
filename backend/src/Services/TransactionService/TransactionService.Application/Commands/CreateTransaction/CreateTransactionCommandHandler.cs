@@ -53,7 +53,13 @@ public class CreateTransactionCommandHandler(
                 }
             }
 
-            var currentStock = product.Stock;
+            var absoluteQuantity = Math.Abs(request.Quantity);
+            
+            var stockChange = request.Type == TransactionType.Sale 
+                ? -absoluteQuantity  
+                : absoluteQuantity;
+
+            var finalStock = product.Stock + stockChange;
 
             var transaction = new Transaction
             {
@@ -66,7 +72,7 @@ public class CreateTransactionCommandHandler(
                 Details = request.Details,
                 TransactionDate = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
-                StockAfterTransaction = currentStock
+                StockAfterTransaction = finalStock
             };
 
             await transactionRepository.AddAsync(transaction, cancellationToken);
@@ -75,12 +81,6 @@ public class CreateTransactionCommandHandler(
             logger.LogInformation(
                 "Transaction {TransactionId} created successfully",
                 transaction.Id);
-
-            var absoluteQuantity = Math.Abs(request.Quantity);
-            
-            var stockChange = request.Type == TransactionType.Sale 
-                ? -absoluteQuantity  
-                : absoluteQuantity;
 
             var stockUpdated = await productServiceClient.UpdateStockAsync(
                 request.ProductId,
@@ -99,15 +99,15 @@ public class CreateTransactionCommandHandler(
                 Id = transaction.Id,
                 ProductId = transaction.ProductId,
                 ProductName = product.Name,
-                CurrentStock = product.Stock + stockChange, 
-                Type = TransactionType.Sale,
+                CurrentStock = finalStock, 
+                Type = request.Type,
                 Quantity = transaction.Quantity,
                 UnitPrice = transaction.UnitPrice,
                 TotalPrice = transaction.TotalPrice,
                 Details = transaction.Details,
                 TransactionDate = transaction.TransactionDate,
                 CreatedAt = transaction.CreatedAt,
-                StockAfterTransaction = currentStock
+                StockAfterTransaction = finalStock
             };
 
             logger.LogInformation(

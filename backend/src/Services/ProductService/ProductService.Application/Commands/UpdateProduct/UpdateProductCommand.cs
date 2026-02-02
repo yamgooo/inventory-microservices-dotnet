@@ -10,6 +10,5 @@ public record UpdateProductCommand(
     string Description,
     string Category,
     string ImageUrl,
-    decimal Price,
-    int Stock
+    decimal Price
 ) : IRequest<Result<ProductDto>>;

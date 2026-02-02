@@ -1,0 +1,149 @@
+<hlm-sheet side="left" #formSheet>
+  <div class="flex flex-row gap-2 items-center">
+    <ng-icon name="lucideArrowLeftRight" size="1.5rem" />
+    <h1 class="text-xl font-semibold">Gestión de Transacciones</h1>
+  </div>
+  <p class="text-gray-600 text-sm leading-relaxed">
+    Consulta el historial de compras y ventas de inventario.
+  </p>
+
+  <div class="flex flex-row justify-between pt-4 pb-4">
+    <div class="flex flex-row gap-2 items-center">
+      <button hlmBtn variant="outline" size="sm" [hlmDropdownMenuTrigger]="filterMenu">
+        <ng-icon hlm size="sm" name="lucideFilter" />
+        Filtros
+      </button>
+    </div>
+
+    <button hlmBtn hlmSheetTrigger variant="default" size="sm" (click)="openCreateForm()">
+      Nueva Transacción
+      <ng-icon hlm size="sm" name="lucidePlus" />
+    </button>
+  </div>
+
+  <ng-template #filterMenu>
+    <hlm-dropdown-menu class="w-72.5">
+      <hlm-dropdown-menu-label>Filtros Avanzados</hlm-dropdown-menu-label>
+
+      <div class="p-3 space-y-3">
+        <div class="grid gap-2">
+          <label class="text-xs font-medium">Tipo</label>
+          <select hlmInput [(ngModel)]="filters.transactionType">
+            <option [ngValue]="undefined">Todos</option>
+            <option [ngValue]="2">Compra</option>
+            <option [ngValue]="1">Venta</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="grid gap-2">
+            <label class="text-xs font-medium">Fecha Inicio</label>
+            <input hlmInput type="date" [(ngModel)]="filters.startDate" />
+          </div>
+          <div class="grid gap-2">
+            <label class="text-xs font-medium">Fecha Fin</label>
+            <input hlmInput type="date" [(ngModel)]="filters.endDate" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="grid gap-2">
+            <label class="text-xs font-medium">Monto Mín</label>
+            <input hlmInput type="number" placeholder="0" [(ngModel)]="filters.minAmount" />
+          </div>
+          <div class="grid gap-2">
+            <label class="text-xs font-medium">Monto Máx</label>
+            <input hlmInput type="number" placeholder="9999" [(ngModel)]="filters.maxAmount" />
+          </div>
+        </div>
+      </div>
+
+      <hlm-dropdown-menu-separator />
+
+      <div class="p-2 flex gap-2">
+        <button hlmBtn class="flex-1" size="sm" (click)="applyFilters()">Aplicar</button>
+        <button hlmBtn variant="outline" class="flex-1" size="sm" (click)="clearAllFilters()">Limpiar</button>
+      </div>
+    </hlm-dropdown-menu>
+  </ng-template>
+
+  @if (isLoading()) {
+    <div class="flex w-full justify-center items-center p-10">
+      <div hlmItem variant="muted" class="flex items-center gap-4 p-4 border rounded-lg">
+        <hlm-spinner />
+        <div hlmItemTitle>Cargando datos...</div>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading() && transactions().length > 0) {
+    <div class="w-full">
+      <div hlmTableContainer>
+        <table hlmTable class="w-full">
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>Fecha</th>
+              <th hlmTh>Producto</th>
+              <th hlmTh>Tipo</th>
+              <th hlmTh class="text-center">Cantidad</th>
+              <th hlmTh class="text-right">Precio Unit.</th>
+              <th hlmTh class="text-right">Total</th>
+              <th hlmTh class="text-center">Stock Pre Transacción</th>
+              <th hlmTh class="text-center">Stock Actual</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (transaction of transactions(); track transaction.id) {
+              <tr hlmTr (click)="selectTransaction(transaction.id, formSheet)" 
+                  class="cursor-pointer hover:bg-gray-50">
+                <td hlmTd class="text-sm">{{ transaction.transactionDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td hlmTd class="font-medium">{{ transaction.productName }}</td>
+                <td hlmTd>
+                  <span [class]="'px-2 py-1 rounded text-xs ' + 
+                    (transaction.type === 2 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
+                    {{ transaction.typeDescription }}
+                  </span>
+                </td>
+                <td hlmTd class="text-center">{{ transaction.quantity }}</td>
+                <td hlmTd class="text-right">$ {{ transaction.unitPrice }}</td>
+                <td hlmTd class="text-right font-semibold">$ {{ transaction.totalPrice }}</td>
+                <td hlmTd class="text-center">{{ transaction.stockAfterTransaction }}</td>
+                <td hlmTd class="text-center">{{ transaction.currentStock }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center mt-4 px-2">
+      <p class="text-sm text-gray-600">
+        Mostrando {{ (currentPage() - 1) * pageSize + 1 }} - 
+        {{ currentPage() * pageSize > totalCount() ? totalCount() : currentPage() * pageSize }} 
+        de {{ totalCount() }} transacciones
+      </p>
+
+      <div class="flex gap-2">
+        <button hlmBtn variant="outline" size="sm" (click)="previousPage()" [disabled]="currentPage() === 1">
+          Anterior
+        </button>
+        <span class="px-3 py-2 text-sm">Página {{ currentPage() }} de {{ totalPages() }}</span>
+        <button hlmBtn variant="outline" size="sm" (click)="nextPage()" 
+                [disabled]="currentPage() === totalPages()">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading() && transactions().length === 0) {
+    <div class="flex w-full justify-center items-center p-10">
+      <div hlmItem variant="muted" class="flex items-center gap-4 p-4 border rounded-lg">
+        <ng-icon name="lucideArrowLeftRight" size="1.5rem" class="text-gray-400" />
+        <div hlmItemTitle>No se encontraron transacciones.</div>
+      </div>
+    </div>
+  }
+
+  <app-transaction-form [transactionId]="selectedId()" (onSaved)="handleSaved()" />
+</hlm-sheet>

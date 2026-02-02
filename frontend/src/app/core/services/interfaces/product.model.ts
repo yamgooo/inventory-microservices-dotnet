@@ -26,7 +26,6 @@ export interface UpdateProductDto {
   category: string;
   imageUrl: string;
   price: number;
-  stock: number;
 }
 
 export interface ProductFilters {

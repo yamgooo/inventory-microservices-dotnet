@@ -42,7 +42,6 @@ public class UpdateProductCommandHandler(
             product.Category = request.Category;
             product.ImageUrl = request.ImageUrl;
             product.Price = request.Price;
-            product.Stock = request.Stock;
             product.UpdatedAt = DateTime.UtcNow;
 
             await repository.UpdateAsync(product, cancellationToken);

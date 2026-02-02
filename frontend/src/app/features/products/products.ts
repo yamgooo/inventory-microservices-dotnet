@@ -1,44 +1,44 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideClipboardList, lucideFilter, lucidePlus } from '@ng-icons/lucide';
-import { HlmInputImports } from '@spartan-ng/helm/input'
-import { HlmButtonImports } from '@spartan-ng/helm/button'
+import { HlmInputImports } from '@spartan-ng/helm/input';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmIconImports } from '@spartan-ng/helm/icon';
 import { HlmTableImports } from '@spartan-ng/helm/table';
-import { ProductService } from '@core/services/product.service'
-import { Product, ProductFilters  } from '@core/services/interfaces/product.model'
-import { Subscription } from 'rxjs'
+import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
+import { ProductService } from '@core/services/product.service';
+import { Product, ProductFilters } from '@core/services/interfaces/product.model';
+import { Subscription } from 'rxjs';
 import { HlmItemImports } from '@spartan-ng/helm/item';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { ProductFormComponent } from '@features/products/product-form';
+import { ProductFormComponent } from '@features/products/product-form.component';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import { BrnSheetImports } from '@spartan-ng/brain/sheet';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [ 
-    NgIcon, 
-    HlmInputImports, 
-    HlmButtonImports, 
-    HlmIconImports, 
-    HlmItemImports, 
+  imports: [
+    NgIcon,
+    HlmInputImports,
+    HlmButtonImports,
+    HlmIconImports,
+    HlmItemImports,
     ProductFormComponent,
     HlmSpinnerImports,
     HlmSheetImports,
     HlmTableImports,
+    HlmDropdownMenuImports,
     BrnSheetImports,
-    FormsModule],
+    FormsModule
+  ],
   templateUrl: './products.html',
   styleUrl: './products.css',
-  providers: [
-    provideIcons({ lucideClipboardList, lucideFilter, lucidePlus })
-  ],
+  providers: [provideIcons({ lucideClipboardList, lucideFilter, lucidePlus })]
 })
 export class Products implements OnInit, OnDestroy {
-
   isLoading = signal(false);
   products = signal<Product[]>([]);
   totalCount = signal(0);
@@ -46,11 +46,19 @@ export class Products implements OnInit, OnDestroy {
   currentPage = signal(1);
 
   totalActivo = computed(() => {
-    return this.products().reduce((acc, product) => acc + (product.price * product.stock), 0);
+    return this.products().reduce((acc, product) => acc + product.price * product.stock, 0);
   });
-  
+
   nameSearchTerm = '';
   pageSize = 10;
+  
+  filters = {
+    category: '',
+    minStock: undefined as number | undefined,
+    maxStock: undefined as number | undefined,
+    minPrice: undefined as number | undefined,
+    maxPrice: undefined as number | undefined
+  };
 
   selectedId = signal<string | null>(null);
 
@@ -61,16 +69,22 @@ export class Products implements OnInit, OnDestroy {
   loadProducts(): void {
     this.isLoading.set(true);
 
-    const filters: ProductFilters = {
+    const requestFilters: ProductFilters = {
       name: this.nameSearchTerm || undefined,
+      category: this.filters.category || undefined,
+      minStock: this.filters.minStock,
+      maxStock: this.filters.maxStock,
+      minPrice: this.filters.minPrice,
+      maxPrice: this.filters.maxPrice,
       page: this.currentPage(),
       pageSize: this.pageSize
     };
 
-    const sub = this.productService.getProducts(filters)
+    const sub = this.productService
+      .getProducts(requestFilters)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (response) => {
+        next: response => {
           if (response?.success && response?.data) {
             this.products.set(response.data.items);
             this.totalCount.set(response.data.totalCount);
@@ -80,7 +94,7 @@ export class Products implements OnInit, OnDestroy {
             this.products.set([]);
           }
         },
-        error: (error) => {
+        error: error => {
           console.error(error);
           this.products.set([]);
         }
@@ -102,8 +116,20 @@ export class Products implements OnInit, OnDestroy {
     this.loadProducts();
   }
 
-  clearFilters(): void {
+  applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  clearAllFilters(): void {
     this.nameSearchTerm = '';
+    this.filters = {
+      category: '',
+      minStock: undefined,
+      maxStock: undefined,
+      minPrice: undefined,
+      maxPrice: undefined
+    };
     this.currentPage.set(1);
     this.loadProducts();
   }
@@ -130,14 +156,21 @@ export class Products implements OnInit, OnDestroy {
   }
 
   createProduct(): void {
-    this.selectedId.set(null)
+    this.selectedId.set(null);
   }
 
-  deleteProduct(): void {
-    alert('open modal Product')
+  selectProduct(id: string, sheet: any): void {
+    this.selectedId.set(id);
+    sheet.open();
   }
 
-  editProduct(): void {
-    alert('open modal Product')
+  handleSaved(sheet: any): void {
+    this.loadProducts();
+    sheet.close();
+  }
+
+  handleDeleted(sheet: any): void {
+    this.loadProducts();
+    sheet.close();
   }
 }

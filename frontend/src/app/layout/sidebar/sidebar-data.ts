@@ -68,7 +68,7 @@ export const data = {
                 },
                 {
                     title: 'Transacciones',
-                    url: 'products',
+                    url: 'transactions',
                 }
             ],
         }
