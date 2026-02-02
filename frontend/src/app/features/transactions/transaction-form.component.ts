@@ -8,7 +8,7 @@ import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
 import { TransactionService } from '@core/services/transaction.service';
 import { ProductService } from '@core/services/product.service';
-import { CreateTransactionDto, Transaction } from '@core/services/interfaces/transaction.model';
+import { CreateTransactionDto, UpdateTransactionDto, Transaction } from '@core/services/interfaces/transaction.model';
 import { Product } from '@core/services/interfaces/product.model';
 import { toast } from 'ngx-sonner';
 import { finalize } from 'rxjs/operators';
@@ -38,17 +38,17 @@ import { CommonModule } from '@angular/common';
 
       @if (!isLoading()) {
         <hlm-sheet-header>
-          <h3 hlmSheetTitle>{{ isViewMode() ? 'Detalle de' : 'Nueva' }} Transacción</h3>
+          <h3 hlmSheetTitle>{{ getTitle() }}</h3>
           <p hlmSheetDescription>
-            {{ isViewMode() ? 'Información completa de la transacción' : 'Registra una compra o venta de inventario' }}
+            {{ getDescription() }}
           </p>
         </hlm-sheet-header>
 
         <div class="grid gap-4 p-4">
           <div class="grid gap-2">
             <label hlmLabel for="product">Producto</label>
-            @if (isViewMode()) {
-              <input hlmInput disabled [value]="viewData()?.productName" />
+            @if (isViewMode() || transactionId()) {
+              <input hlmInput disabled [value]="viewData()?.productName || getProductName(form.productId)" />
             } @else {
               <select hlmInput id="product" [(ngModel)]="form.productId" (change)="onProductChange()">
                 <option value="">Selecciona un producto</option>
@@ -61,10 +61,10 @@ import { CommonModule } from '@angular/common';
 
           <div class="grid gap-2">
             <label hlmLabel for="type">Tipo</label>
-            @if (isViewMode()) {
+            @if (isViewMode() || transactionId()) {
               <span [class]="'px-2 py-1 rounded text-xs w-fit ' + 
-                (viewData()?.type === 2 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
-                {{ viewData()?.typeDescription }}
+                (displayType === 2 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
+                {{ displayType === 2 ? 'Compra' : 'Venta' }}
               </span>
             } @else {
               <select hlmInput id="type" [(ngModel)]="form.type">
@@ -94,7 +94,7 @@ import { CommonModule } from '@angular/common';
           <div class="grid gap-2">
             <label hlmLabel for="total">Total</label>
             <input hlmInput id="total" type="number" 
-                   [value]="isViewMode() ? viewData()?.totalPrice : form.totalPrice" disabled />
+                   [value]="form.totalPrice" disabled />
           </div>
 
           @if (isViewMode()) {
@@ -125,7 +125,7 @@ import { CommonModule } from '@angular/common';
             </div>
           }
 
-          @if (!isViewMode() && selectedProduct()) {
+          @if (!isViewMode() && selectedProduct() && !transactionId()) {
             <div class="p-3 bg-blue-50 rounded text-sm">
               <p class="font-medium">{{ selectedProduct()?.name }}</p>
               <p class="text-gray-600">Stock actual: {{ selectedProduct()?.stock }} unidades</p>
@@ -136,8 +136,9 @@ import { CommonModule } from '@angular/common';
         <hlm-sheet-footer>
           @if (isViewMode()) {
             <button hlmBtn variant="outline" (click)="ctx.close()">Cerrar</button>
+            <button hlmBtn (click)="enableEdit()">Editar</button>
           } @else {
-            <button hlmBtn variant="outline" (click)="ctx.close()">Cancelar</button>
+            <button hlmBtn variant="outline" (click)="cancel(ctx)">Cancelar</button>
             <button hlmBtn (click)="save(ctx)" [disabled]="isSaving() || !isValid()">
               {{ isSaving() ? 'Guardando...' : 'Guardar' }}
             </button>
@@ -170,6 +171,7 @@ export class TransactionFormComponent {
   selectedProduct = signal<Product | null>(null);
   isLoading = signal(false);
   isSaving = signal(false);
+  originalForm: any = {};
 
   constructor() {
     this.loadProducts();
@@ -184,6 +186,26 @@ export class TransactionFormComponent {
         this.resetForm();
       }
     });
+  }
+
+  get displayType() {
+    return this.viewData()?.type || this.form.type;
+  }
+
+  getTitle(): string {
+    if (this.transactionId()) {
+      return this.isViewMode() ? 'Detalle de Transacción' : 'Editar Transacción';
+    }
+    return 'Nueva Transacción';
+  }
+
+  getDescription(): string {
+    if (this.transactionId() && !this.isViewMode()) return 'Modifica los valores permitidos';
+    return this.isViewMode() ? 'Información completa de la transacción' : 'Registra una compra o venta de inventario';
+  }
+
+  getProductName(id: string): string {
+    return this.products().find(p => p.id === id)?.name || '';
   }
 
   loadProducts(): void {
@@ -213,6 +235,7 @@ export class TransactionFormComponent {
               totalPrice: res.data.totalPrice,
               details: res.data.details || ''
             };
+            this.originalForm = { ...this.form };
           }
         },
         error: () => toast.error('Error al cargar la transacción')
@@ -236,50 +259,86 @@ export class TransactionFormComponent {
     return !!this.form.productId && this.form.quantity > 0 && this.form.unitPrice >= 0;
   }
 
+  enableEdit(): void {
+    this.isViewMode.set(false);
+  }
+
+  cancel(ctx: any): void {
+    if (this.transactionId()) {
+      this.form = { ...this.originalForm };
+      this.isViewMode.set(true);
+    } else {
+      ctx.close();
+    }
+  }
+
   save(ctx: any): void {
     if (!this.isValid()) {
       toast.error('Completa todos los campos');
       return;
     }
 
-    const product = this.selectedProduct();
-    if (this.form.type === 1 && product && product.stock < this.form.quantity) {
-      toast.error(`Stock insuficiente. Disponible: ${product.stock}`);
-      return;
-    }
-
     this.isSaving.set(true);
+    const id = this.transactionId();
 
-    const dto: CreateTransactionDto = {
-      productId: this.form.productId,
-      type: this.form.type,
-      quantity: this.form.quantity,
-      unitPrice: this.form.unitPrice,
-      totalPrice: this.form.totalPrice,
-      details: this.form.details.trim() || ''
-    };
+    if (id) {
+      const dto: UpdateTransactionDto = {
+        id: id,
+        quantity: this.form.quantity,
+        unitPrice: this.form.unitPrice,
+        details: this.form.details.trim() || ''
+      };
 
-    this._transactionService
-      .createTransaction(dto)
-      .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe({
-        next: res => {
-          if (res.success) {
-            this.onSaved.emit();
-            this.reloadProductsAfterSave();
-            
-            setTimeout(() => {
-              toast.success('Transacción creada correctamente');
-            }, 100);
-            
-            ctx.close();
-            this.resetForm();
-          } else {
-            toast.error(res.message || 'Error al crear transacción');
-          }
-        },
-        error: () => toast.error('Error al crear transacción')
-      });
+      this._transactionService.updateTransaction(dto)
+        .pipe(finalize(() => this.isSaving.set(false)))
+        .subscribe({
+          next: res => {
+            if (res.success) {
+              toast.success('Transacción actualizada');
+              this.onSaved.emit();
+              this.reloadProductsAfterSave();
+              ctx.close();
+            } else {
+              toast.error(res.message || 'Error al actualizar');
+            }
+          },
+          error: () => toast.error('Error al actualizar')
+        });
+    } else {
+      const product = this.selectedProduct();
+      if (this.form.type === 1 && product && product.stock < this.form.quantity) {
+        toast.error(`Stock insuficiente. Disponible: ${product.stock}`);
+        this.isSaving.set(false);
+        return;
+      }
+
+      const dto: CreateTransactionDto = {
+        productId: this.form.productId,
+        type: this.form.type,
+        quantity: this.form.quantity,
+        unitPrice: this.form.unitPrice,
+        totalPrice: this.form.totalPrice,
+        details: this.form.details.trim() || ''
+      };
+
+      this._transactionService
+        .createTransaction(dto)
+        .pipe(finalize(() => this.isSaving.set(false)))
+        .subscribe({
+          next: res => {
+            if (res.success) {
+              this.onSaved.emit();
+              this.reloadProductsAfterSave();
+              setTimeout(() => toast.success('Transacción creada correctamente'), 100);
+              ctx.close();
+              this.resetForm();
+            } else {
+              toast.error(res.message || 'Error al crear transacción');
+            }
+          },
+          error: () => toast.error('Error al crear transacción')
+        });
+    }
   }
 
   reloadProductsAfterSave(): void {
@@ -302,5 +361,6 @@ export class TransactionFormComponent {
       details: ''
     };
     this.selectedProduct.set(null);
+    this.isViewMode.set(false);
   }
 }

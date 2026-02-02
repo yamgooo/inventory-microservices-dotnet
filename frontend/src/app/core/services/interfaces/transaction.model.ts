@@ -28,6 +28,13 @@ export interface CreateTransactionDto {
   details?: string;
 }
 
+export interface UpdateTransactionDto {
+  id: string;
+  quantity: number;
+  unitPrice: number;
+  details?: string;
+}
+
 export interface TransactionFilters {
   productId?: string;
   transactionType?: TransactionType;
