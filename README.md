@@ -22,7 +22,7 @@ Sistema web para la gestión de productos y transacciones de inventario, desarro
 
 #### Frontend
 - [Node.js 18+](https://nodejs.org/) 
-- [Angular CLI 17+](https://angular.io/cli)
+- [Angular CLI 21+](https://angular.io/cli)
 
 ---
 
@@ -40,26 +40,20 @@ Ejecutar el archivo `script.sql` ubicado en la raíz del proyecto en SQL Server 
 
 ### 2. Configurar Connection Strings
 
-**ProductService/API/appsettings.json:**
+**ProductService.API/appsettings.json:**
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=InventoryDB;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "ServiceUrls": {
-    "TransactionService": "https://localhost:7192"
   }
 }
 ```
 
-**TransactionService/API/appsettings.json:**
+**TransactionService.API/appsettings.json:**
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=InventoryDB;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "ServiceUrls": {
-    "ProductService": "https://localhost:7279"
   }
 }
 ```
@@ -69,19 +63,17 @@ Ejecutar el archivo `script.sql` ubicado en la raíz del proyecto en SQL Server 
 
 **Terminal 1:**
 ```bash
-cd ProductService/API
+cd ProductService/ProductService.API
 dotnet restore
 dotnet run
 ```
 
 **Terminal 2:**
 ```bash
-cd TransactionService/API
+cd TransactionService/TransactionService.API
 dotnet restore
 dotnet run
 ```
-
-
 
 ---
 
@@ -113,7 +105,6 @@ ng serve
 **Acceder:** `http://localhost:4200`
 
 ---
-
 
 ## 📸 Evidencias
 
@@ -165,7 +156,7 @@ Formulario de edición de transacciones con ajuste automático de inventario.
 Panel de filtros avanzados por nombre, categoría, precio y stock.
 
 ---
-
+ 
 ### 8. Filtros Dinámicos - Transacciones
 ![Filtros Transacciones](./docs/08-filtros-transacciones.webp)
 
