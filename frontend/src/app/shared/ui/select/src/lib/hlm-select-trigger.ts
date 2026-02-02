@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, contentChild, inject, inp
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown } from '@ng-icons/lucide';
 import { BrnSelect, BrnSelectTrigger } from '@spartan-ng/brain/select';
-import { HlmIcon } from '@spartan-ng/helm/icon';
 import { hlm } from '@spartan-ng/helm/utils';
 import { cva } from 'class-variance-authority';
 import type { ClassValue } from 'clsx';
@@ -24,7 +23,7 @@ export const selectTriggerVariants = cva(
 
 @Component({
 	selector: 'hlm-select-trigger',
-	imports: [BrnSelectTrigger, NgIcon, HlmIcon],
+	imports: [BrnSelectTrigger, NgIcon],
 	providers: [provideIcons({ lucideChevronDown })],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
@@ -33,13 +32,13 @@ export const selectTriggerVariants = cva(
 			@if (_icon()) {
 				<ng-content select="ng-icon" />
 			} @else {
-				<ng-icon hlm size="sm" class="ml-2 flex-none" name="lucideChevronDown" />
+				<ng-icon class="ml-2 flex-none size-4" name="lucideChevronDown" />
 			}
 		</button>
 	`,
 })
 export class HlmSelectTrigger {
-	protected readonly _icon = contentChild(HlmIcon);
+	protected readonly _icon = contentChild(NgIcon);
 
 	protected readonly _brnSelect = inject(BrnSelect, { optional: true });
 

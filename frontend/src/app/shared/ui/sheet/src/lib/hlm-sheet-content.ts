@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Renderer2, effect, inject, signal } from '@angular/core';
-import { provideIcons } from '@ng-icons/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideX } from '@ng-icons/lucide';
 import { injectExposedSideProvider, injectExposesStateProvider } from '@spartan-ng/brain/core';
-import { HlmIconImports } from '@spartan-ng/helm/icon';
 import { classes } from '@spartan-ng/helm/utils';
 import { cva } from 'class-variance-authority';
 import { HlmSheetClose } from './hlm-sheet-close';
@@ -28,7 +27,7 @@ export const sheetVariants = cva(
 
 @Component({
 	selector: 'hlm-sheet-content',
-	imports: [HlmSheetClose, HlmIconImports],
+	imports: [HlmSheetClose, NgIcon],
 	providers: [provideIcons({ lucideX })],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: {
@@ -39,7 +38,7 @@ export const sheetVariants = cva(
 		<ng-content />
 		<button hlmSheetClose>
 			<span class="sr-only">Close</span>
-			<ng-icon hlm size="sm" name="lucideX" />
+			<ng-icon class="size-4" name="lucideX" />
 		</button>
 	`,
 })

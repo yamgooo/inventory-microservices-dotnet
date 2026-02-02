@@ -3,7 +3,6 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideClipboardList, lucideFilter, lucidePlus } from '@ng-icons/lucide';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmIconImports } from '@spartan-ng/helm/icon';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { ProductService } from '@core/services/product.service';
@@ -24,7 +23,6 @@ import { BrnSheetImports } from '@spartan-ng/brain/sheet';
     NgIcon,
     HlmInputImports,
     HlmButtonImports,
-    HlmIconImports,
     HlmItemImports,
     ProductFormComponent,
     HlmSpinnerImports,
@@ -51,7 +49,7 @@ export class Products implements OnInit, OnDestroy {
 
   nameSearchTerm = '';
   pageSize = 10;
-  
+
   filters = {
     category: '',
     minStock: undefined as number | undefined,
@@ -64,7 +62,7 @@ export class Products implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService) { }
 
   loadProducts(): void {
     this.isLoading.set(true);
