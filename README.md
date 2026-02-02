@@ -60,7 +60,6 @@ Ejecutar el archivo `script.sql` ubicado en la raíz del proyecto en SQL Server 
 
 ## 🚀 Ejecución del Backend
 
-
 **Terminal 1:**
 ```bash
 cd ProductService/ProductService.API
@@ -146,7 +145,7 @@ Formulario para registrar compras o ventas con validación de stock.
 ### 6. Edición de Transacciones
 ![Editar Transacción](./docs/06-editar-transaccion.webp)
 
-Formulario de edición de transacciones con ajuste automático de inventario.
+Formulario de edición de transacciones
 
 ---
 
